@@ -55,7 +55,7 @@ def TransformPoints(points):
         tpoints.append((xt, yt))
     return tpoints
 
-# Rotate all the points by certian angle around x-axis using matrix transformation
+# Rotate all the points by certian angle around x-axis using matrix transformation (rotation matrix)
 def RotateX(points, angle):
     if angle == 0:
         return points
@@ -67,7 +67,7 @@ def RotateX(points, angle):
         rpoints.append((x,y,z))
     return rpoints
 
-# Rotate all the points by certian angle around y-axis using matrix transformation
+# Rotate all the points by certian angle around y-axis using matrix transformation (rotation matrix)
 def RotateY(points, angle):
     if angle == 0:
         return points
@@ -79,10 +79,13 @@ def RotateY(points, angle):
         rpoints.append((x,y,z))
     return rpoints
 
-# Generates the 2D flattened coordinates of the parametric point
+# Takes in 3D parametric form of coordinates on the sphere, rotates them about x and y axes, and flatten them into 2D using perspective
 def GetXY(r, t, p):
+    # 1.convert parametric form into cartesian form        
     cor = GetPtOnSp(r, t, p)
+    # 2.rotate them about x-acis and then y-axis        
     rcor = RotateY([RotateX([cor], ax)[0]], ay)[0]
+    # 3.transform the points into 2D         
     tcor = TransformPoints([rcor])[0]
     return tcor
 
@@ -191,7 +194,7 @@ while running:
 
     #screen.blit(mainpt, (tcor[0] + screen.get_size()[0]/2, tcor[1] + screen.get_size()[1]/2))
 
-    
+    # incrementing the angle by which all the points rotate about x and y axes            
     ax += 0.007
     ay += 0.005
     if ax >= 2*np.pi:
@@ -199,6 +202,7 @@ while running:
     if ay >= 2*np.pi:
         ay = 0
 
+    # set frame rate        
     clock.tick(50)
 
     pygame.display.update()
