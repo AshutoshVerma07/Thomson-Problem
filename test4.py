@@ -126,7 +126,7 @@ def Gradient(points, point):
     # Return the gradient (Gradient -> [∂(v)/∂t, ∂(v)/∂p] vector)    
     return (dt, dp)
 
-# Generate the plot points "." on sphere
+# creates a list of plot points "." on sphere
 plotpoints = GeneratePoints(50)
 
 
