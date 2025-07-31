@@ -18,7 +18,7 @@ normalpt = font.render('•', True,
             pygame.Color(0, 0, 0, 0))
 
 mainpt = font.render('@', True,
-            pygame.Color(255, 225, 255, 225),
+            pygame.Color(248, 187, 102, 225),
             pygame.Color(0, 0, 0, 0))
 
 
