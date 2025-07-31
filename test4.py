@@ -22,7 +22,7 @@ mainpt = font.render('@', True,
             pygame.Color(0, 0, 0, 0))
 
 
-
+# Parametric form of sphere (r, theeta, phi)
 def GetPtOnSp(r,t,p):
     x = r*np.sin(p)*np.cos(t)
     y = r*np.cos(p)
@@ -41,6 +41,7 @@ def GeneratePoints(R):
             points.append(GetPtOnSp(R,t,p))
     return points
 
+# Flatten 3D points to 2D points while considering prespective 
 def TransformPoints(points):
     tpoints = []
     focal_dist = 600
@@ -54,6 +55,7 @@ def TransformPoints(points):
         tpoints.append((xt, yt))
     return tpoints
 
+# Rotate all the points by certian angle around x-axis using matrix transformation
 def RotateX(points, angle):
     if angle == 0:
         return points
@@ -65,7 +67,7 @@ def RotateX(points, angle):
         rpoints.append((x,y,z))
     return rpoints
 
-
+# Rotate all the points by certian angle around y-axis using matrix transformation
 def RotateY(points, angle):
     if angle == 0:
         return points
@@ -77,14 +79,14 @@ def RotateY(points, angle):
         rpoints.append((x,y,z))
     return rpoints
 
-
+# Generates the 2D flattened coordinates of the parametric point
 def GetXY(r, t, p):
     cor = GetPtOnSp(r, t, p)
     rcor = RotateY([RotateX([cor], ax)[0]], ay)[0]
     tcor = TransformPoints([rcor])[0]
     return tcor
 
-
+# Calculate distance between two points on the sphere
 def CalcDist(p1, p2):
     x1 = p1[0]*math.sin(p1[2])*math.cos(p1[1])
     y1 = p1[0]*math.cos(p1[2])
@@ -97,17 +99,7 @@ def CalcDist(p1, p2):
     d = ((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**1/2
     return d
 
-
-def SumofDistFromOtherPoints(points, pt):
-    d_sum = 0
-    # (r, t, p)
-    for point in points:
-        if pt == point:
-            continue
-        else:
-            d_sum += CalcDist(point, pt)
-    return d_sum
-    
+# Find the gradient of the potential function (V = 1/d) in terms of angle "theeta" (t) and "phi" (p)
 def Gradient(points, point):
     dp = 0
     dt = 0
@@ -115,38 +107,44 @@ def Gradient(points, point):
     r = pt[0]
     t = pt[1]
     p = pt[2]
+             
     for poi in points:
         if poi != point: 
             x1 = poi[0]*math.sin(poi[2])*math.cos(poi[1])
             y1 = poi[0]*math.cos(poi[2])
             z1 = poi[0]*math.sin(poi[2])*math.sin(poi[1])
             d = CalcDist(poi, pt)
+            # partial derivativ of V=1/d (where d is the distance between two charges, and is a function of "theeta"(t) and "phi"(p)) wrt angle "phi" (p) = -1/d^2 * ∂(d)/∂p           
             dp += (-(x1 - r*math.sin(p)*math.cos(t))*math.cos(p)*math.cos(t) + (y1 - r*math.cos(p))*math.sin(p) - (z1 - r*math.sin(p)*math.sin(t))*math.cos(p)*math.sin(t))/d*(1/d)
             #print("hey")
+            # partial derivativ of V=1/d (where d is the distance between two charges, and is a function of "theeta"(t) and "phi"(p)) wrt angle "theeta" (t) = -1/d^2 * ∂(d)/∂t                 
             dt += ((x1 - r*np.sin(p)*np.cos(t))*np.sin(p)*np.sin(t) - (z1 - r*np.sin(p)*np.sin(t))*np.sin(p)*np.cos(t))/d*(1/d)
 
-        
+    # Return the gradient (Gradient -> [∂(v)/∂t, ∂(v)/∂p] vector)    
     return (dt, dp)
 
-
+# Generate the plot points "." on sphere
 plotpoints = GeneratePoints(50)
+
+
 ax = 0.8
 ay = np.pi/4
 
-# take in number of chrages
+# Number of charges 
 chargenum = 5
-# creates a list of charges
+
+# creates a list of charges (list containes -> coordinates of charges)
 charges = []
 for i in range(0, chargenum):
     charge = (50, random.uniform(0,2*np.pi), random.uniform(0,2*np.pi))
     charges.append(charge)
-# Approximation 
+            
 avg = 0
-approx = 10
 move = True
 running = True
 
 while running:
+    # Check for Quit         
     for event in pygame.event.get():
         if event.type == pygame.QUIT or pygame.KEYDOWN == pygame.K_ESCAPE:
             pygame.quit()
@@ -168,20 +166,27 @@ while running:
     # Render Charges on sphere
     sum= 0
     for charge in charges:
+                
+        # Get the flattened 2D coordinates of the charges    
         chargexy = GetXY(r=charge[0], t=charge[1], p=charge[2])
+                
+        # Render the chrages on the screen        
         screen.blit(mainpt, (chargexy[0] + screen.get_size()[0]/2, chargexy[1] + screen.get_size()[1]/2))
         grad = Gradient(charges, charge)
         dt = grad[0]
         dp = grad[1]
-
+                
+        # move the charge to a new place by changing it's "theeta" and "phi" angles, using the gradient        
         if move:
             chargenew = (charge[0], charge[1]+ dt*5000, charge[2]+ dp*5000)
             charges[charges.index(charge)] = chargenew
         sum += dp+dt
+
     avg = sum/len(charge)
-    if abs(avg) < 10**-10:
+    # if the average of all the changes required to minimize energy is very small, we have a good enough appriximation and we stop moving the charges        
+    if abs(avg) < 10**-10 and move == True:
         move = False
-    #print(avg) 
+        print("Done!") 
     
 
     #screen.blit(mainpt, (tcor[0] + screen.get_size()[0]/2, tcor[1] + screen.get_size()[1]/2))
